@@ -1,0 +1,71 @@
+version: '3'
+
+volumes:
+  minio:
+  mysql:
+
+services:
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
+    volumes:
+      - .:/var/www/project/:ro,cached
+    ports:
+      - "8080:8080"
+    env_file:
+      - config/development.env
+
+  php:
+    build:
+      context: .
+      dockerfile: php.Dockerfile
+    volumes:
+      - .:/var/www/project/:rw,cached
+    expose:
+      - "9000"
+    env_file:
+      - config/development.env
+
+  mysql:
+    image: mariadb
+    volumes:
+      - mysql:/var/lib/mysql
+    env_file:
+      - config/development.env
+
+  # 128Mb Memcached Container
+  memcached:
+    image: memcached:alpine
+    command: memcached -m 128m
+    env_file:
+      - config/development.env
+  
+  # AWS S3 clone for local development
+  minio:
+    image: minio/minio
+    volumes:
+      - minio:/export
+    command: server /export
+    ports:
+      - "9000:9000"
+    env_file:
+      - config/development.env
+
+# Chromedriver for tests
+
+# Varnish
+
+# DNS
+
+# HTTPS CERTIFICATE
+
+##
+# TODO:
+##
+# - Allow updating projects by $ git pull upstream master
+# - In order to do this we should have ./env file for environmental variables
+# - We should have a base docker-compose.yml and docker-compose.project.yml
+# - docker-compose.project.yml can be used to add custom services which are only used by this project
+# - Enable new relic for php image
