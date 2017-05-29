@@ -13,7 +13,7 @@ services:
     volumes:
       - .:/var/www/project/:ro,cached
     ports:
-      - "8080:8080"
+      - "80:80"
     env_file:
       - config/development.env
 
@@ -49,15 +49,42 @@ services:
       - minio:/export
     command: server /export
     ports:
-      - "9000:9000"
+      - "127.0.0.1:9000:9000"
     env_file:
       - config/development.env
+  
+  # Headless Chrome with Selenium as a test runner
+  # This needs SYS_ADMIN caps for OSX
+  selenium:
+    image: yukinying/chrome-headless-browser-selenium
+    ports:
+      - "127.0.0.1:4444:4444"
+    cap_add:
+      - SYS_ADMIN
+    shm_size: 1024m
+    dns: 
+      - 10.254.254.254
 
-# Chromedriver for tests
+  mail:
+    image: mailhog/mailhog
+    expose:
+      - 1025
+
+  dnsmasq:
+    image: andyshinn/dnsmasq
+    ports:
+      - 10.254.254.254:53:53/tcp
+      - 10.254.254.254:53:53/udp
+    cap_add:
+      - NET_ADMIN
+    command: "--address=/test/10.254.254.254"
+    restart: always
+
+# Add papertrail for logging
+
+# Use newrelic for php container
 
 # Varnish
-
-# DNS
 
 # HTTPS CERTIFICATE
 

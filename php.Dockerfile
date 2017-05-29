@@ -19,9 +19,9 @@ RUN \
 
     # Used by phpunit tests
     php7-tokenizer \
-    
-    # Install dev dependencies
-    && apk add --update curl \
+   	
+    # Install mail client and dev dependencies
+    && apk add --update curl msmtp bash \
 
     ##
     # Install composer
@@ -29,15 +29,18 @@ RUN \
     && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
     && composer global require hirak/prestissimo \
 
-    # Remove dev dependencies
-    && apk del curl \
-
     # Remove cache and tmp files
     && rm -rf /var/cache/apk/* \
     && rm -rf /tmp/*
 
 ENV PORT=9000 \
 	PROJECT_ROOT=/var/www/project
+
+# Install msmtp wrapper which acts like sendmail
+RUN \
+	rm /usr/sbin/sendmail \
+	&& curl -L -o /usr/sbin/sendmail https://gist.githubusercontent.com/onnimonni/e7f2a5199d6dc719ffd32dc4d6ac1902/raw/bdd38dc3d1ab5c9308b14b93eaafbb87f28454dc/sendmail \
+	&& chmod +x /usr/sbin/sendmail
 
 RUN set -ex \
 	&& cd /etc/php7/ \
@@ -69,9 +72,9 @@ RUN set -ex \
 		echo; \
 	} | tee conf.d/opcache.conf \
 	# Allow more resources for php-fpm
-	&& sed -i '/^pm.max_children/c\pm.max_children = 10' php-fpm.d/www.conf \
-	&& sed -i '/^pm.min_spare_servers/c\pm.min_spare_servers = 2' php-fpm.d/www.conf \
-	&& sed -i '/^pm.max_spare_servers/c\pm.max_spare_servers = 4' php-fpm.d/www.conf
+	&& sed -i '/^pm.max_children/c\pm.max_children = 5' php-fpm.d/www.conf \
+	&& sed -i '/^pm.min_spare_servers/c\pm.min_spare_servers = 1' php-fpm.d/www.conf \
+	&& sed -i '/^pm.max_spare_servers/c\pm.max_spare_servers = 2' php-fpm.d/www.conf
 
 EXPOSE ${PORT}
 WORKDIR ${PROJECT_ROOT}
