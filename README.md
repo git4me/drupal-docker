@@ -25,7 +25,6 @@ You need to do this everytime after booting the machine.
 ## Setup DNS name resolver for *.test addresses
 **OSX**
 ```
-$ mkdir /etc/resolver/test
 $ echo "nameserver 10.254.254.254" | sudo tee /etc/resolver/test
 $ echo "domain test" | sudo tee --append /etc/resolver/test
 $ sudo killall -HUP mDNSResponder
